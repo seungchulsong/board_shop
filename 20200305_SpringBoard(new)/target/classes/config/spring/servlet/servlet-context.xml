@@ -8,6 +8,7 @@
 		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
 
 	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	<context:annotation-config/>
 	
 	<!-- Enables the Spring MVC @Controller programming model -->
 	<annotation-driven />
@@ -25,10 +26,12 @@
 	<!-- <context:component-scan base-package="com.tj.db" /> -->
 	
 	<!-- Controller 수동생성 -->
-	<beans:bean class="com.tj.board.HomeController"></beans:bean>
+
 	
 	<!-- 내가 선언한 Controller -->
-	
+	<context:component-scan base-package="dao"/>
+	<context:component-scan base-package="service"/>
+	<context:component-scan	base-package="com.tj.board" />
 	
 	
 	

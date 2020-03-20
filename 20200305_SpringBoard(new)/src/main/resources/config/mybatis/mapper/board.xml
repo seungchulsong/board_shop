@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+
+	<!-- 게시물 전체조회 -->
+	<select id="board_list" resultType="board">	
+		select * from board_new
+		order by ref desc,step asc
+	</select>
+
+
+	<!-- (조건별)전체게시물수 -->
+	<select id="board_row_total" parameterType="map" resultType="int">
+	    select nvl(count(*),0) from board_new
+	    <!-- Dynamic Query -->
+		<trim prefix="where" prefixOverrides="or">
+			<if test="subject!=null">
+				subject like '%' || #{subject} || '%'
+			</if>
+			
+			<if test="name!=null">
+				or m_name like '%' || #{name} || '%'
+			</if>
+		
+			<if test="content!=null">
+				or content like '%' || #{content} || '%'
+			</if>	
+		</trim>
+	</select>
+	
+	
+	<!-- 조건별(page+검색조건) 목록조회-->
+	<select id="board_condition_list" parameterType="map" resultType="board">
+		select * from
+		(
+			select
+			rank() over(order by ref desc,step asc) no,
+			b.*,
+			(select count(*) from comment_tb where b_idx=b.idx) comment_cnt
+			from
+			(
+			select * from board_new
+			<!-- Dynamic Query -->
+			<trim prefix="where" prefixOverrides="or">
+			<if test="subject!=null">
+				subject like '%'|| #{subject} ||'%'
+			</if>
+			
+			<if test="name!=null">
+				or m_name like '%' || #{name} || '%'
+			</if>
+			
+			<if test="content!=null">
+				or content like '%'|| #{content} || '%'
+			</if>
+			</trim>
+			) b
+		)
+		where no between #{start} and #{end}
+	</select>	
+	
+	<!-- idx 해당되는 게시물 1건 -->
+	<select id="board_one" parameterType="int" resultType="board">
+		select * from board_new where idx=#{idx}
+	</select>
+	
+	
+	<!-- 조회수 증가 -->
+	<update id="board_update_readhit" parameterType="int">
+		update board_new set readhit = readhit + 1
+		where idx=#{idx}
+	</update>
+	
+	
+	<!-- step 증가 -->
+	<update id="board_update_step" parameterType="board">
+		update board_new set step = step + 1
+		where ref=#{ref} and step > #{step}	
+	</update>
+	
+	
+	
+	<!-- 새글쓰기 -->
+	<insert id="board_insert" parameterType="vo.BoardVo">
+		insert into board_new values(seq_board_new_idx.nextVal,
+							  #{subject},
+							  #{content},
+							  #{ip},
+							  sysdate,
+							  0,
+							  'y',
+							  seq_board_new_idx.currVal,
+							  0,
+							  0,
+							  #{m_idx},
+							  #{m_name})
+	
+	</insert>
+	
+	<!-- 답글쓰기 -->
+	<insert id="board_reply" parameterType="vo.BoardVo">
+		insert into board_new values(seq_board_new_idx.nextVal,
+							  #{subject},
+							  #{content},
+							  #{ip},
+							  sysdate,
+							  0,
+							  'y',
+							  #{ref},
+							  #{step},
+							  #{depth},
+							  #{m_idx},
+							  #{m_name})
+	
+	</insert>
+	
+	
+	<update id="board_update" parameterType="board">
+		update board_new set subject=#{subject},
+							 content=#{content},
+							 ip=#{ip},
+							 regdate=sysdate
+							 where idx=#{idx}
+	
+	</update>
+	
+	<update id="board_delete"	parameterType="int">
+		update board_new set use_yu='n' where idx=#{idx}	
+	</update>
+	
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
